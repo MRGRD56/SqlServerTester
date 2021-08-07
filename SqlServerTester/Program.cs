@@ -52,18 +52,21 @@ namespace SqlServerTester
             {
                 Console.CursorVisible = false;
                 Console.ForegroundColor = ConsoleColor.Cyan;
-                
-                for (var i = 0; !cancellationToken.IsCancellationRequested; i++)
+
+                for (var i = 0;; i++)
                 {
+                    if (cancellationToken.IsCancellationRequested) break;
+
                     var loadingCharacterIndex = i % loadingCharacters.Length;
                     var loadingCharacter = loadingCharacters[loadingCharacterIndex];
 
                     ResetPosition();
                     Console.Write($"{loadingCharacter} {title}");
-                
+
                     await Task.Delay(TimeSpan.FromSeconds(.25), cancellationToken);
                 }
             }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { }
             finally
             {
                 Console.ResetColor();
