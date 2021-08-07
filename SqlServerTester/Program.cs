@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Data.SqlClient;
+using System.Drawing;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
+using Pastel;
 
 namespace SqlServerTester
 {
@@ -12,16 +15,20 @@ namespace SqlServerTester
             var connectionString = args.ElementAtOrDefault(0);
             if (string.IsNullOrWhiteSpace(connectionString))
             {
-                Console.Write("Enter a connection string: ");
+                Console.Write("Enter the connection string: ");
                 Console.ForegroundColor = ConsoleColor.Yellow;
                 connectionString = Console.ReadLine();
                 Console.ResetColor();
             }
 
+            var loadingCancellation = new CancellationTokenSource();
+            ShowLoading("Connecting", loadingCancellation.Token);
+
             try
             {
                 await using var connection = new SqlConnection(connectionString);
                 await connection.OpenAsync();
+                loadingCancellation.Cancel();
                 ConsoleExt.Success("Successfully connected");
                 Console.WriteLine($"Database: {connection.Database ?? "<none>"}");
                 Console.WriteLine($"Data Source: {connection.DataSource ?? "<none>"}");
@@ -30,8 +37,42 @@ namespace SqlServerTester
             }
             catch (Exception exception)
             {
+                loadingCancellation.Cancel();
                 ConsoleExt.Error("Connection failed");
                 await Console.Error.WriteLineAsync(exception.Message);
+            }
+        }
+
+        private static async void ShowLoading(string title, CancellationToken cancellationToken)
+        {
+            var loadingCharacters = new[] { "/", "-", "\\", "|" };
+            var (left, top) = Console.GetCursorPosition();
+            
+            void ResetPosition()
+            {
+                Console.SetCursorPosition(left, top);
+            }
+            
+            try
+            {
+                Console.CursorVisible = false;
+                for (var i = 0; !cancellationToken.IsCancellationRequested; i++)
+                {
+                    var loadingCharacterIndex = i % loadingCharacters.Length;
+                    var loadingCharacter = loadingCharacters[loadingCharacterIndex];
+
+                    ResetPosition();
+                    Console.Write($"{loadingCharacter} {title}".Pastel(Color.Aquamarine));
+                
+                    await Task.Delay(TimeSpan.FromSeconds(.25), cancellationToken);
+                }
+            }
+            finally
+            {
+                ResetPosition();
+                Console.Write(new string(' ', title.Length + 2));
+                ResetPosition();
+                Console.CursorVisible = true;
             }
         }
     }
