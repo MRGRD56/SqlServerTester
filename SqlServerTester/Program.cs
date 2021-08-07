@@ -27,7 +27,7 @@ namespace SqlServerTester
                 await using var connection = new SqlConnection(connectionString);
                 await connection.OpenAsync();
                 loadingCancellation.Cancel();
-                ConsoleExt.Success("Successfully connected");
+                ConsoleExt.Success("Connection succeeded");
                 Console.WriteLine($"Database: {connection.Database ?? "<none>"}");
                 Console.WriteLine($"Data Source: {connection.DataSource ?? "<none>"}");
                 Console.WriteLine($"Server Version: {connection.ServerVersion ?? "<none>"}");
