@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Data.SqlClient;
-using System.Drawing;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Pastel;
 
 namespace SqlServerTester
 {
@@ -48,27 +46,27 @@ namespace SqlServerTester
             var loadingCharacters = new[] { "/", "-", "\\", "|" };
             var (left, top) = Console.GetCursorPosition();
             
-            void ResetPosition()
-            {
-                Console.SetCursorPosition(left, top);
-            }
-            
+            void ResetPosition() => Console.SetCursorPosition(left, top);
+
             try
             {
                 Console.CursorVisible = false;
+                Console.ForegroundColor = ConsoleColor.Cyan;
+                
                 for (var i = 0; !cancellationToken.IsCancellationRequested; i++)
                 {
                     var loadingCharacterIndex = i % loadingCharacters.Length;
                     var loadingCharacter = loadingCharacters[loadingCharacterIndex];
 
                     ResetPosition();
-                    Console.Write($"{loadingCharacter} {title}".Pastel(Color.Aquamarine));
+                    Console.Write($"{loadingCharacter} {title}");
                 
                     await Task.Delay(TimeSpan.FromSeconds(.25), cancellationToken);
                 }
             }
             finally
             {
+                Console.ResetColor();
                 ResetPosition();
                 Console.Write(new string(' ', title.Length + 2));
                 ResetPosition();
