@@ -8,6 +8,8 @@ namespace SqlServerTester
 {
     internal static class Program
     {
+        private static readonly TimeSpan MaxConnectionTime = TimeSpan.FromSeconds(30);
+        
         private static async Task Main(string[] args)
         {
             AppDomain.CurrentDomain.ProcessExit += CurrentDomainOnProcessExit;
@@ -28,7 +30,11 @@ namespace SqlServerTester
             try
             {
                 await using var connection = new SqlConnection(connectionString);
-                await connection.OpenAsync();
+                var openAsyncTask = connection.OpenAsync();
+                if (await Task.WhenAny(openAsyncTask, Task.Delay(MaxConnectionTime)) != openAsyncTask)
+                {
+                    throw new TimeoutException($"Connection time has expired ({MaxConnectionTime.TotalSeconds} secs)");
+                }
                 loadingCancellation.Cancel();
                 ConsoleExt.Success("Connection succeeded");
                 Console.WriteLine($"Database: {connection.Database ?? "<none>"}");
