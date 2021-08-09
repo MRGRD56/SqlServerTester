@@ -10,6 +10,9 @@ namespace SqlServerTester
     {
         private static async Task Main(string[] args)
         {
+            AppDomain.CurrentDomain.ProcessExit += CurrentDomainOnProcessExit;
+            Console.CancelKeyPress += ConsoleOnCancelKeyPress;
+            
             var connectionString = args.ElementAtOrDefault(0);
             if (string.IsNullOrWhiteSpace(connectionString))
             {
@@ -75,6 +78,17 @@ namespace SqlServerTester
                 ResetPosition();
                 Console.CursorVisible = true;
             }
+        }
+        
+        private static void CurrentDomainOnProcessExit(object sender, EventArgs e)
+        {
+            Console.CursorVisible = true;
+            Console.ResetColor();
+        }
+        
+        private static void ConsoleOnCancelKeyPress(object sender, ConsoleCancelEventArgs e)
+        {
+            CurrentDomainOnProcessExit(null, null);
         }
     }
 }
